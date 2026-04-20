@@ -29,18 +29,22 @@ function SidebarItem({ icon: Icon, label, path, active, onClick }: SidebarItemPr
     return (
         <button
             onClick={() => onClick(path)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative overflow-hidden ${
                 active
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-400 hover:bg-gray-900 hover:text-white'
+                    ? 'bg-zinc-800/80 text-white shadow-lg'
+                    : 'text-zinc-500 hover:bg-zinc-800/40 hover:text-white'
             }`}
         >
-            <Icon className={`w-4 h-4 ${active ? 'text-black' : 'text-gray-500 group-hover:text-white'}`} />
+            {active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-red-600 rounded-r-full shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
+            )}
+            <Icon className={`w-4 h-4 transition-colors ${active ? 'text-red-500' : 'text-zinc-500 group-hover:text-white'}`} />
             <span className="flex-1 text-left">{label}</span>
-            {active && <ChevronRight className="w-3 h-3" />}
+            {active && <ChevronRight className="w-3 h-3 text-red-500" />}
         </button>
     );
 }
+
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false); // Default false for mobile
@@ -109,14 +113,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 }`}
             >
                 {/* Sidebar Header */}
-                <div className="p-5 border-b border-gray-800 flex-shrink-0 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-white/5">
-                            <span className="text-black font-bold text-xl">M</span>
+                <div className="p-6 border-b border-zinc-900/50 flex-shrink-0 flex items-center justify-between bg-zinc-950/20">
+                    <div className="flex items-center gap-3.5 group">
+                        <div className="w-11 h-11 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800 shadow-inner group-hover:border-red-600/30 transition-all duration-500">
+                            <span className="text-red-600 font-black text-2xl italic tracking-tighter shadow-[0_0_15px_rgba(220,38,38,0.2)]">M</span>
                         </div>
-                        <div>
-                            <h2 className="text-base font-bold tracking-tight">Menfess</h2>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">Admin Panel</p>
+
+                        <div className="text-left">
+                            <h2 className="text-sm font-black tracking-[0.2em] text-white uppercase italic leading-none mb-1.5">MENFESS</h2>
+                            <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.3em] leading-none italic">ADMIN PORTAL</p>
                         </div>
                     </div>
                     <button 
@@ -130,10 +135,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 {/* Navigation */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar">
                     {menuGroups.map((group, idx) => (
-                        <div key={idx} className="space-y-2">
-                            <p className="px-3 text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+                        <div key={idx} className="space-y-4">
+                            <p className="px-3 text-[10px] font-black text-zinc-600 uppercase tracking-widest pl-1 border-l-2 border-transparent">
                                 {group.title}
                             </p>
+
                             <div className="space-y-1">
                                 {group.items.map((item) => (
                                     <SidebarItem
@@ -149,14 +155,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </div>
 
                 {/* Sidebar Footer */}
-                <div className="p-4 border-t border-gray-800 bg-black/50 backdrop-blur-xl flex-shrink-0">
+                <div className="p-4 border-t border-zinc-900 bg-black flex-shrink-0">
                     <div 
                         onClick={() => handleNavigate('/admin/profile')}
                         className={`flex items-center gap-3 p-2.5 mb-3 rounded-2xl border transition-colors cursor-pointer group ${
-                            isActive('/admin/profile') ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/5 hover:bg-white/10'
+                            isActive('/admin/profile') ? 'bg-zinc-800 border-zinc-700' : 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800'
                         }`}
                     >
-                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0 overflow-hidden border border-zinc-700">
                             {(usePage().props.auth as any).admin?.avatar_url ? (
                                 <img 
                                     src={(usePage().props.auth as any).admin.avatar_url} 
@@ -164,7 +170,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <span className="text-black font-bold text-sm">
+                                <span className="text-white font-bold text-sm">
                                     {(usePage().props.auth as any).admin?.name?.charAt(0).toUpperCase() || 'A'}
                                 </span>
                             )}
@@ -191,20 +197,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 min-w-0 flex flex-col transition-all duration-300 lg:ml-64">
+            <div className="flex-1 min-w-0 flex flex-col transition-all duration-300 lg:ml-64 bg-black">
                 {/* Top Sticky Header */}
-                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 h-16 shrink-0">
+                <header className="sticky top-0 z-40 bg-black border-b border-zinc-900 h-16 shrink-0">
                     <div className="flex items-center justify-between px-4 sm:px-6 h-full">
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => setSidebarOpen(true)} 
-                                className="lg:hidden p-2 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100"
+                                className="lg:hidden p-2 hover:bg-zinc-900 rounded-xl transition-colors border border-zinc-800"
                             >
-                                <Menu className="w-5 h-5 text-gray-900" />
+                                <Menu className="w-5 h-5 text-white" />
                             </button>
                             <div className="flex items-center gap-2">
-                                <div className="h-4 w-[1px] bg-gray-200 hidden sm:block"></div>
-                                <h1 className="text-xs font-bold text-gray-900 capitalize italic tracking-wide">
+                                <div className="h-4 w-[1px] bg-zinc-800 hidden sm:block"></div>
+                                <h1 className="text-xs font-black text-white capitalize italic tracking-widest">
                                     {(url ? url.split('/').pop() : 'Dashboard')?.replace('-', ' ') || 'Dashboard'}
                                 </h1>
                             </div>
@@ -212,25 +218,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         
                         {/* Right Actions */}
                         <div className="flex items-center gap-3">
-                            <div className="hidden sm:flex -space-x-2 mr-1">
-                                <div className="w-7 h-7 rounded-full border-2 border-white bg-green-500 shadow-sm" title="System Online"></div>
-                                <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">+3</div>
-                            </div>
-                            <button className="relative p-2.5 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-100 group">
-                                <Bell className="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" />
-                                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                            <button className="relative p-2.5 hover:bg-zinc-900 rounded-xl transition-all border border-transparent hover:border-zinc-800 group">
+                                <Bell className="w-4 h-4 text-zinc-500 group-hover:text-red-500 transition-colors" />
+                                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-600 rounded-full"></span>
                             </button>
                         </div>
                     </div>
                 </header>
 
+
                 {/* Page Content Body */}
-                <main className="p-4 sm:p-6 lg:p-8 flex-1">
+                <main className="p-4 sm:p-6 lg:p-8 flex-1 dark">
                     <div className="max-w-7xl mx-auto space-y-6">
                         {children}
                     </div>
                 </main>
             </div>
         </div>
+
     );
 }

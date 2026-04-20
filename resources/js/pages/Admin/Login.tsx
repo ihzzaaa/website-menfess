@@ -28,65 +28,72 @@ export default function AdminLogin({ status }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 selection:bg-black selection:text-white">
+        <div className="min-h-screen bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 selection:bg-red-600 selection:text-white relative overflow-hidden">
             <Head title="Admin Log in" />
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            {/* Background Decorative Elements */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+                <div className="absolute -top-24 -left-24 w-96 h-96 bg-red-600 opacity-[0.03] rounded-full blur-[100px]"></div>
+                <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-red-600 opacity-[0.03] rounded-full blur-[100px]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/5 via-transparent to-transparent opacity-50"></div>
+            </div>
+
+            <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-left">
                 <div className="flex justify-center">
-                    <div className="w-14 h-14 rounded-xl bg-black flex items-center justify-center shadow-lg">
-                        <Lock className="w-7 h-7 text-white" />
+                    <div className="w-20 h-20 rounded-[2rem] bg-zinc-900 flex items-center justify-center border border-zinc-800 shadow-inner group hover:border-red-600/30 transition-all duration-700">
+                        <Lock className="w-8 h-8 text-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)] animate-pulse" />
                     </div>
                 </div>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-                    Admin Portal
+                <h2 className="mt-8 text-center text-2xl font-black text-white italic tracking-[0.3em] uppercase">
+                    ADMIN PORTAL
                 </h2>
-                <p className="mt-2 text-center text-sm text-gray-500">
-                    Masuk untuk mengelola platform Menfess
+                <p className="mt-3 text-center text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] italic">
+                    ENTERING RESTRICTED AREA
                 </p>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-10 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100">
+            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
+                <div className="bg-zinc-950/40 backdrop-blur-xl py-12 px-6 shadow-2xl sm:rounded-[3rem] sm:px-12 border border-zinc-900/50">
                     
                     {status && (
-                        <div className="mb-6 rounded-lg bg-gray-50 p-4 text-sm font-medium text-gray-900 border border-gray-200 flex items-center gap-2">
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-white text-xs">✓</span> 
+                        <div className="mb-8 rounded-2xl bg-zinc-900 p-5 text-[10px] font-black text-red-500 border border-red-500/10 flex items-center gap-4 uppercase tracking-widest italic shadow-inner">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-red-600/10 text-red-500 text-[10px] border border-red-500/20 shrink-0">✓</span> 
                             {status}
                         </div>
                     )}
 
-                    <form onSubmit={submit} className="space-y-6">
+                    <form onSubmit={submit} className="space-y-8 text-left">
                         <div>
-                            <Label htmlFor="email" className="block text-sm font-semibold text-gray-900">
-                                Email Address
+                            <Label htmlFor="email" className="block text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1 mb-3 italic">
+                                EMAIL ADDRESS
                             </Label>
-                            <div className="mt-2 text-left">
+                            <div className="relative group">
                                 <Input
                                     id="email"
                                     type="email"
                                     name="email"
                                     value={data.email}
-                                    className="block w-full rounded-lg border-gray-300 py-5 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-black sm:text-sm transition-colors"
+                                    className="block w-full rounded-2xl border-zinc-900 bg-zinc-950/50 h-14 pl-6 text-white text-xs placeholder-zinc-800 focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 transition-all font-medium italic group-hover:border-zinc-800"
                                     autoComplete="username"
                                     autoFocus
                                     onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="admin@example.com"
+                                    placeholder="admin@menfess.id"
                                 />
-                                {errors.email && <InputError message={errors.email} className="mt-2 text-sm text-red-600 font-medium" />}
+                                {errors.email && <InputError message={errors.email} className="mt-2.5 text-[9px] text-red-500 font-black uppercase italic tracking-widest ml-1" />}
                             </div>
                         </div>
 
                         <div>
-                            <Label htmlFor="password" className="block text-sm font-semibold text-gray-900">
-                                Password
+                            <Label htmlFor="password" className="block text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1 mb-3 italic">
+                                PASSWORD
                             </Label>
-                            <div className="mt-2 relative text-left">
+                            <div className="relative group">
                                 <Input
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     value={data.password}
-                                    className="block w-full rounded-lg border-gray-300 py-5 pr-10 text-gray-900 placeholder-gray-400 focus:border-black focus:ring-black sm:text-sm transition-colors"
+                                    className="block w-full rounded-2xl border-zinc-900 bg-zinc-950/50 h-14 pl-6 pr-12 text-white text-xs placeholder-zinc-800 focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 transition-all font-medium italic group-hover:border-zinc-800"
                                     autoComplete="current-password"
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="••••••••"
@@ -94,63 +101,61 @@ export default function AdminLogin({ status }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="absolute inset-y-0 right-0 pr-5 flex items-center text-zinc-800 hover:text-red-600 transition-colors"
                                 >
                                     {showPassword ? (
-                                        <EyeOff className="h-5 w-5" aria-hidden="true" />
+                                        <EyeOff className="h-4 w-4" aria-hidden="true" />
                                     ) : (
-                                        <Eye className="h-5 w-5" aria-hidden="true" />
+                                        <Eye className="h-4 w-4" aria-hidden="true" />
                                     )}
                                 </button>
-                                {errors.password && <InputError message={errors.password} className="mt-2 text-sm text-red-600 font-medium" />}
+                                {errors.password && <InputError message={errors.password} className="mt-2.5 text-[9px] text-red-500 font-black uppercase italic tracking-widest ml-1" />}
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between px-1">
                             <div className="flex items-center">
                                 <Checkbox
                                     id="remember"
                                     name="remember"
                                     checked={data.remember}
                                     onCheckedChange={(checked) => setData('remember', checked as boolean)}
-                                    className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black data-[state=checked]:bg-black data-[state=checked]:border-black"
+                                    className="h-4 w-4 rounded border-zinc-900 bg-zinc-950/50 text-red-600 focus:ring-red-600/30 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 transition-all"
                                 />
-                                <Label htmlFor="remember" className="ml-2 block text-sm text-gray-900 cursor-pointer select-none">
-                                    Ingat saya
+                                <Label htmlFor="remember" className="ml-3 block text-[10px] text-zinc-700 font-black uppercase tracking-widest cursor-pointer select-none italic hover:text-zinc-500 transition-colors">
+                                    INGAT SAYA
                                 </Label>
                             </div>
 
-                            <div className="text-sm">
-                                <a href="#" className="font-semibold text-gray-600 hover:text-black hover:underline underline-offset-4">
-                                    Lupa password?
-                                </a>
-                            </div>
+                            <a href="#" className="text-[10px] font-black text-zinc-700 hover:text-red-500 transition-colors uppercase tracking-widest italic leading-none border-b border-zinc-900">
+                                Lupa?
+                            </a>
                         </div>
 
-                        <div className="pt-2">
+                        <div className="pt-6">
                             <Button
                                 type="submit"
-                                className="w-full flex justify-center py-6 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all disabled:opacity-70 group"
+                                className="w-full h-16 rounded-[2rem] bg-zinc-950 text-zinc-500 border border-dashed border-zinc-800 hover:bg-zinc-900 hover:text-white hover:border-red-600/30 transition-all group shadow-2xl relative overflow-hidden italic text-[11px] font-black uppercase tracking-[0.3em] border-none"
                                 disabled={processing}
                             >
                                 {processing ? (
                                     <>
-                                        <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                                        Memproses...
+                                        <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                                        AUTH...
                                     </>
                                 ) : (
-                                    <>
-                                        Masuk ke Dashboard
-                                        <ArrowRight className="ml-2 -mr-1 h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                                    </>
+                                    <div className="flex items-center justify-center gap-3">
+                                        MASUK KE DASHBOARD
+                                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2 text-red-600" aria-hidden="true" />
+                                    </div>
                                 )}
                             </Button>
                         </div>
                     </form>
                 </div>
                 
-                <div className="mt-8 text-center text-xs text-gray-400">
-                    &copy; {new Date().getFullYear()} Menfess Platform. All rights reserved.
+                <div className="mt-12 text-center text-[9px] font-black text-zinc-800 uppercase tracking-[0.5em] italic">
+                    &copy; {new Date().getFullYear()} MENFESS OVERSIGHT SYSTEM. All rights secured.
                 </div>
             </div>
         </div>
