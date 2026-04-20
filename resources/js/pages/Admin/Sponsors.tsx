@@ -1,111 +1,133 @@
-import { Head, router } from '@inertiajs/react';
-import { LogOut, Menu, X, ChevronLeft } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { 
+    Gift, 
+    Upload, 
+    Image as ImageIcon, 
+    Calendar, 
+    ExternalLink, 
+    Trash2, 
+    MoreVertical, 
+    Plus,
+    LayoutGrid,
+    Clock,
+    AlertCircle,
+    GripVertical,
+    Eye
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 
-interface SponsorsProps {
-    status?: string;
-}
-
-export default function Sponsors({ status }: SponsorsProps) {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-
-    const handleLogout = () => {
-        router.post('/admin/logout');
-    };
-
-    const handleNavigate = (path: string) => {
-        window.location.href = path;
-    };
-
-    const menuItems = [
-        { icon: '📊', label: 'Dashboard', path: '/admin/dashboard' },
-        { icon: '👥', label: 'Users', path: '/admin/users' },
-        { icon: '💬', label: 'Moderation', path: '/admin/moderation' },
-        { icon: '🛍️', label: 'Marketplace', path: '/admin/marketplace' },
-        { icon: '📋', label: 'Polls', path: '/admin/polls' },
-        { icon: '📢', label: 'Notifications', path: '/admin/notifications' },
-        { icon: '🎁', label: 'Sponsors', path: '/admin/sponsors', active: true },
-    ];
-
+export default function Sponsors() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-cyan-100">
-            <Head title="Sponsors & Banners" />
+        <div className="space-y-6 text-left">
+            <Head title="Sponsor & Banner Management" />
 
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b-2 border-cyan-200/50 shadow-sm">
-                <div className="flex items-center justify-between px-6 py-4">
-                    <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => setSidebarOpen(!sidebarOpen)} 
-                            className="p-2 hover:bg-cyan-100 rounded-lg transition-colors"
-                        >
-                            {sidebarOpen ? (
-                                <X className="w-6 h-6 text-cyan-700" />
-                            ) : (
-                                <Menu className="w-6 h-6 text-cyan-700" />
-                            )}
-                        </button>
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                            Menfess Admin
-                        </h1>
-                    </div>
-                    <Button 
-                        onClick={handleLogout}
-                        className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        Logout
+            {/* Header Area */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="text-left">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">Sponsor & Banner Management</h2>
+                    <p className="text-xs sm:text-sm text-gray-500">Kelola gambar carousel, urutan sponsor, dan masa berlaku iklan.</p>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <Button variant="outline" className="rounded-xl h-9 sm:h-10 text-[10px] sm:text-xs font-bold border-gray-200 bg-white shadow-sm">
+                        <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> Ad History
+                    </Button>
+                    <Button className="rounded-xl h-9 sm:h-10 text-[10px] sm:text-xs font-bold bg-black hover:bg-gray-900 border-none px-4 shadow-lg shadow-black/10">
+                        <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> Upload Banner
                     </Button>
                 </div>
-            </header>
+            </div>
 
-            <div className="flex">
-                {/* Sidebar */}
-                <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 bg-white/60 backdrop-blur-lg border-r-2 border-cyan-200/50 p-6 overflow-hidden`}>
-                    <nav className="space-y-3">
-                        {menuItems.map((item) => (
-                            <button
-                                key={item.path}
-                                onClick={() => handleNavigate(item.path)}
-                                className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors ${
-                                    item.active
-                                        ? 'bg-cyan-100/80 border-2 border-cyan-300 text-cyan-700'
-                                        : 'hover:bg-cyan-50 border-2 border-transparent text-cyan-600'
-                                }`}
-                            >
-                                {item.icon} {item.label}
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
-
-                {/* Main Content */}
-                <main className="flex-1 p-8">
-                    <div className="mb-6 flex items-center gap-2">
-                        <button 
-                            onClick={() => handleNavigate('/admin/dashboard')}
-                            className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 font-semibold"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                            Back
-                        </button>
-                    </div>
-
-                    {status && (
-                        <div className="mb-6 rounded-xl bg-green-100 border-2 border-green-400 p-4 text-green-700 font-semibold">
-                            ✓ {status}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Carousel & Banner Manager */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-left">
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4 text-purple-500" /> Active Carousel
+                            </h3>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">0/5 Active Slots</span>
                         </div>
-                    )}
-                    
-                    <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-12 border-2 border-cyan-200/50 shadow-lg text-center min-h-96 flex items-center justify-center">
-                        <div>
-                            <div className="text-6xl mb-4">🎁</div>
-                            <h2 className="text-3xl font-bold text-cyan-700 mb-2">Sponsors & Banners</h2>
-                            <p className="text-cyan-600 font-semibold">Halaman untuk sponsor dan banner management akan diisi di sini</p>
+                        
+                        {/* Banner Slot Placeholder */}
+                        <div className="space-y-4">
+                             <div className="p-8 border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center text-center bg-gray-50/30">
+                                <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                                    <ImageIcon className="w-8 h-8 text-gray-200" />
+                                </div>
+                                <h4 className="text-sm font-bold text-gray-900">Belum Ada Banner Aktif</h4>
+                                <p className="text-xs text-gray-500 max-w-[240px] mx-auto mt-2 leading-relaxed">
+                                    Unggah gambar promosi atau sponsor untuk ditampilkan di halaman utama website.
+                                </p>
+                                <Button className="mt-6 h-9 px-6 rounded-xl bg-black text-white hover:bg-gray-900 text-[10px] font-bold">
+                                    Tambah Banner Pertama
+                                </Button>
+                             </div>
                         </div>
                     </div>
-                </main>
+
+                    {/* Expiry Management List Placeholder */}
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden text-left min-h-[300px] flex flex-col">
+                        <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-white text-left">
+                            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-orange-400" /> Ad Expiry Monitor
+                            </h3>
+                            <Button variant="ghost" size="sm" className="h-7 px-3 text-[10px] font-bold text-gray-400">Filter By Date</Button>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white text-left">
+                            <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
+                                <Calendar className="w-6 h-6 text-orange-200" />
+                            </div>
+                            <h4 className="text-sm font-bold text-gray-900 leading-none">Tidak Ada Iklan Terjadwal</h4>
+                            <p className="text-[11px] text-gray-500 max-w-[300px] leading-relaxed mx-auto italic mt-2.5">
+                                Iklan dengan masa berlaku terbatas akan muncul di sini untuk memudahkan Anda memantau durasi kontrak sponsor.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Side Control & Preview Area */}
+                <div className="space-y-6 text-left">
+                    <div className="bg-gray-900 p-6 rounded-3xl text-white text-left relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
+                        <h4 className="text-sm font-bold mb-6 flex items-center gap-2 relative z-10 text-white">
+                            <Eye className="w-4 h-4 text-blue-400" /> Live Preview
+                        </h4>
+                        <div className="aspect-[16/9] w-full bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center relative z-10">
+                            <ImageIcon className="w-10 h-10 text-gray-700 opacity-30 mb-2" />
+                            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-widest leading-none">Mobile Home Preview</p>
+                        </div>
+                        <div className="mt-6 flex flex-col gap-2 relative z-10">
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                                <span className="text-[10px] text-gray-300">Carousel Speed</span>
+                                <span className="text-[10px] font-bold text-white">5s (Auto)</span>
+                           </div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                                <span className="text-[10px] text-gray-300">Banner Format</span>
+                                <span className="text-[10px] font-bold text-white">Responsive</span>
+                           </div>
+                        </div>
+                    </div>
+
+                    {/* Guidelines & Rules */}
+                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-left">
+                        <h4 className="text-xs font-bold text-gray-900 mb-6 flex items-center gap-2 leading-none">
+                            <AlertCircle className="w-4 h-4 text-orange-500" /> Upload Rules
+                        </h4>
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-400 shrink-0">1</div>
+                                <p className="text-[10px] text-gray-500 leading-relaxed italic">Rekomendasi rasio gambar adalah 16:9 atau 21:9 untuk tampilan optimal di desktop & mobile.</p>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-400 shrink-0">2</div>
+                                <p className="text-[10px] text-gray-500 leading-relaxed italic">Ukuran file maksimal per gambar adalah 2MB dalam format .JPG atau .PNG guna menjaga kecepatan load.</p>
+                            </div>
+                        </div>
+                        <Button variant="ghost" className="w-full mt-6 h-9 text-[10px] font-bold text-gray-400 hover:text-black rounded-xl">
+                            Selengkapnya
+                        </Button>
+                    </div>
+                </div>
             </div>
         </div>
     );

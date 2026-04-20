@@ -24,19 +24,32 @@ class AuthController extends Controller
     /**
      * Handle an incoming admin authentication request.
      */
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
+        // Log untuk debugging
+        \Log::info('Admin login attempt', [
+            'email' => $credentials['email'],
+            'remember' => $request->boolean('remember'),
+            'request_type' => $request->header('X-Inertia') ? 'Inertia' : 'Regular'
+        ]);
+
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Typically redirect to intended or admin dashboard
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+            \Log::info('Admin login successful', [
+                'email' => $credentials['email'],
+                'admin_id' => Auth::guard('admin')->id()
+            ]);
+
+            return redirect()->intended(route('admin.dashboard'));
         }
+
+        \Log::warning('Admin login failed', ['email' => $credentials['email']]);
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',

@@ -43,5 +43,13 @@ Route::prefix('admin')->group(function () {
         Route::get('/polls', [DashboardController::class, 'polls'])->name('admin.polls');
         Route::get('/notifications', [DashboardController::class, 'notifications'])->name('admin.notifications');
         Route::get('/sponsors', [DashboardController::class, 'sponsors'])->name('admin.sponsors');
+        Route::get('/musical-menfess', [DashboardController::class, 'musicalMenfess'])->name('admin.musical-menfess');
+        Route::post('/settings/toggle-musical', [DashboardController::class, 'toggleMusicalSetting'])->name('admin.settings.toggle-musical');
+        
+        Route::delete('/musical-menfess/{message}', [DashboardController::class, 'deleteSongfessMessage'])->name('admin.musical-menfess.delete');
+        Route::post('/users/{user}/toggle-block', [DashboardController::class, 'toggleBlockUser'])->name('admin.users.toggle-block');
+        
+        Route::get('/profile', [DashboardController::class, 'profile'])->name('admin.profile');
+        Route::patch('/profile', [DashboardController::class, 'updateProfile'])->name('admin.profile.update');
     });
 });
