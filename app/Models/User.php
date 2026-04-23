@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password', 'is_blocked'])]
+#[Fillable(['name', 'email', 'password', 'is_blocked', 'coin_balance', 'is_shadow_banned', 'is_verified_seller'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -29,6 +29,39 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_blocked' => 'boolean',
+            'is_shadow_banned' => 'boolean',
+            'is_verified_seller' => 'boolean',
         ];
+    }
+
+    public function marketplaceItems()
+    {
+        return $this->hasMany(MarketplaceItem::class);
+    }
+
+    public function sponsors()
+    {
+        return $this->hasMany(Sponsor::class);
+    }
+
+    public function menfessPosts()
+    {
+        return $this->hasMany(MenfessPost::class);
+    }
+
+    public function coinTransactions()
+    {
+        return $this->hasMany(CoinTransaction::class);
+    }
+
+    public function kycRequest()
+    {
+        return $this->hasOne(KycRequest::class)->latest();
+    }
+
+    public function songfessMessages()
+    {
+        return $this->hasMany(SongfessMessage::class);
     }
 }

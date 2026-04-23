@@ -40,7 +40,7 @@ export default function AdminLogin({ status }: Props) {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-left">
                 <div className="flex justify-center">
-                    <div className="w-20 h-20 rounded-[2rem] bg-zinc-900 flex items-center justify-center border border-zinc-800 shadow-inner group hover:border-red-600/30 transition-all duration-700">
+                    <div className="w-20 h-20 rounded-[2rem] bg-zinc-800 flex items-center justify-center border border-zinc-700 shadow-lg group hover:border-red-600/30 transition-all duration-700">
                         <Lock className="w-8 h-8 text-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)] animate-pulse" />
                     </div>
                 </div>
@@ -53,10 +53,10 @@ export default function AdminLogin({ status }: Props) {
             </div>
 
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
-                <div className="bg-zinc-950/40 backdrop-blur-xl py-12 px-6 shadow-2xl sm:rounded-[3rem] sm:px-12 border border-zinc-900/50">
+                <div className="bg-gradient-to-b from-zinc-800/50 to-zinc-900/60 backdrop-blur-xl py-12 px-6 shadow-2xl sm:rounded-[3rem] sm:px-12 border border-zinc-700/50">
                     
                     {status && (
-                        <div className="mb-8 rounded-2xl bg-zinc-900 p-5 text-[10px] font-black text-red-500 border border-red-500/10 flex items-center gap-4 uppercase tracking-widest italic shadow-inner">
+                        <div className="mb-8 rounded-2xl bg-zinc-800/40 p-5 text-[10px] font-black text-red-500 border border-red-500/10 flex items-center gap-4 uppercase tracking-widest italic shadow-lg">
                             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-red-600/10 text-red-500 text-[10px] border border-red-500/20 shrink-0">✓</span> 
                             {status}
                         </div>
@@ -73,7 +73,7 @@ export default function AdminLogin({ status }: Props) {
                                     type="email"
                                     name="email"
                                     value={data.email}
-                                    className="block w-full rounded-2xl border-zinc-900 bg-zinc-950/50 h-14 pl-6 text-white text-xs placeholder-zinc-800 focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 transition-all font-medium italic group-hover:border-zinc-800"
+                                    className="block w-full rounded-2xl border border-zinc-700/80 bg-zinc-800 shadow-lg shadow-black/60 h-14 pl-6 text-zinc-100 text-xs placeholder-zinc-500 focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all font-medium italic group-hover:border-zinc-600"
                                     autoComplete="username"
                                     autoFocus
                                     onChange={(e) => setData('email', e.target.value)}
@@ -93,7 +93,7 @@ export default function AdminLogin({ status }: Props) {
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     value={data.password}
-                                    className="block w-full rounded-2xl border-zinc-900 bg-zinc-950/50 h-14 pl-6 pr-12 text-white text-xs placeholder-zinc-800 focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 transition-all font-medium italic group-hover:border-zinc-800"
+                                    className="block w-full rounded-2xl border border-zinc-700/80 bg-zinc-800 shadow-lg shadow-black/60 h-14 pl-6 pr-12 text-zinc-100 text-xs placeholder-zinc-500 focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all font-medium italic group-hover:border-zinc-600"
                                     autoComplete="current-password"
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="••••••••"
@@ -120,22 +120,18 @@ export default function AdminLogin({ status }: Props) {
                                     name="remember"
                                     checked={data.remember}
                                     onCheckedChange={(checked) => setData('remember', checked as boolean)}
-                                    className="h-4 w-4 rounded border-zinc-900 bg-zinc-950/50 text-red-600 focus:ring-red-600/30 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 transition-all"
+                                    className="h-4 w-4 rounded border border-zinc-700/80 bg-zinc-800 shadow-sm shadow-black/60 text-red-600 focus:ring-red-600/30 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 transition-all font-medium"
                                 />
                                 <Label htmlFor="remember" className="ml-3 block text-[10px] text-zinc-700 font-black uppercase tracking-widest cursor-pointer select-none italic hover:text-zinc-500 transition-colors">
                                     INGAT SAYA
                                 </Label>
                             </div>
-
-                            <a href="#" className="text-[10px] font-black text-zinc-700 hover:text-red-500 transition-colors uppercase tracking-widest italic leading-none border-b border-zinc-900">
-                                Lupa?
-                            </a>
                         </div>
 
                         <div className="pt-6">
                             <Button
                                 type="submit"
-                                className="w-full h-16 rounded-[2rem] bg-zinc-950 text-zinc-500 border border-dashed border-zinc-800 hover:bg-zinc-900 hover:text-white hover:border-red-600/30 transition-all group shadow-2xl relative overflow-hidden italic text-[11px] font-black uppercase tracking-[0.3em] border-none"
+                                className="w-full h-16 rounded-[2rem] bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-red-600/30 transition-all group shadow-2xl relative overflow-hidden italic text-[11px] font-black uppercase tracking-[0.3em]"
                                 disabled={processing}
                             >
                                 {processing ? (

@@ -1,151 +1,202 @@
-import { Head } from '@inertiajs/react';
-import { 
-    ClipboardList, 
-    Calendar, 
-    Clock, 
-    Send, 
-    Smartphone, 
-    Plus,
-    MoreVertical,
-    BarChart3,
-    CheckCircle2,
-    XCircle,
-    DraftingCompass,
-    Timer,
-    AlertCircle
+import { useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import {
+    ClipboardList, Plus, Trash2, Play, Pause, BarChart3, CheckCircle2, XCircle, Timer, AlertCircle, Send, Smartphone, Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { toast } from 'sonner';
 
-export default function Polls() {
+interface PollItem {
+    id: number; question: string; options: string[]; status: string;
+    scheduled_for: string | null; coin_reward: number; votes_count: number;
+    vote_distribution: Record<number, number>; created_at: string;
+}
+interface Props {
+    polls: PollItem[];
+    pollStats: { total: number; live: number; draft: number; closed: number; total_votes: number; };
+}
+
+export default function Polls({ polls = [], pollStats }: Props) {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [pollToDelete, setPollToDelete] = useState<number | null>(null);
+    const [options, setOptions] = useState(['', '']);
+    const { data, setData, post, processing, reset } = useForm({ question: '', options: ['', ''], status: 'draft' as string });
+
+    const addOption = () => { if (options.length < 6) { setOptions([...options, '']); } };
+    const removeOption = (idx: number) => { if (options.length > 2) { const n = options.filter((_, i) => i !== idx); setOptions(n); } };
+    const updateOption = (idx: number, val: string) => { const n = [...options]; n[idx] = val; setOptions(n); };
+
+    const handleCreate = (e: React.FormEvent) => {
+        e.preventDefault();
+        const filteredOptions = options.filter(o => o.trim() !== '');
+        if (filteredOptions.length < 2) { toast.error('Minimal 2 opsi!'); return; }
+        data.options = filteredOptions;
+        post('/admin/polls', { preserveScroll: true, onSuccess: () => { setIsCreateOpen(false); reset(); setOptions(['', '']); toast.success('Poll created!'); } });
+    };
+
+    const handleToggleStatus = (id: number) => router.put(`/admin/polls/${id}/toggle-status`, {}, { preserveScroll: true, onSuccess: () => toast.success('Status updated!') });
+    
+    const confirmDelete = () => {
+        if (pollToDelete) {
+            router.delete(`/admin/polls/${pollToDelete}`, { 
+                preserveScroll: true, 
+                onSuccess: () => {
+                    setIsDeleteOpen(false);
+                    setPollToDelete(null);
+                    toast.success('Poll deleted!');
+                } 
+            });
+        }
+    };
+
+    const handleDelete = (id: number) => { 
+        setPollToDelete(id);
+        setIsDeleteOpen(true);
+    };
+
+    const statusColors: Record<string, string> = { draft: 'bg-zinc-800 text-zinc-400 border-zinc-700', live: 'bg-green-600/10 text-green-500 border-green-500/20', closed: 'bg-red-600/10 text-red-500 border-red-500/20' };
+    const statusLabels: Record<string, string> = { draft: 'DRAFT', live: 'LIVE', closed: 'CLOSED' };
+
     return (
         <div className="space-y-6 text-left">
             <Head title="Daily Polls Configurator" />
 
-            {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="text-left">
                     <h2 className="text-xl sm:text-2xl font-black text-white leading-tight italic tracking-widest uppercase">DAILY POLLS CONFIGURATOR</h2>
-                    <p className="text-xs sm:text-sm text-zinc-500 mt-1">Atur jadwal polling harian dan kelola bank soal otomatis.</p>
+                    <p className="text-xs sm:text-sm text-zinc-500 mt-1">Buat, kelola, dan pantau polling harian komunitas.</p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <Button variant="outline" className="rounded-xl h-9 sm:h-11 text-[10px] sm:text-xs font-black uppercase tracking-widest border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all italic border-dashed">
-                        <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> Bank Soal
-                    </Button>
-                    <Button className="rounded-xl h-9 sm:h-11 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-zinc-950 text-zinc-500 border border-dashed border-zinc-800 hover:bg-zinc-900 hover:text-white hover:border-red-600/30 px-6 italic transition-all">
-                        <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 text-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)]" /> Buat Polling
-                    </Button>
-                </div>
+                <Button onClick={() => setIsCreateOpen(true)} className="rounded-xl h-11 text-xs font-black uppercase tracking-widest bg-zinc-950 text-zinc-500 border border-dashed border-zinc-800 hover:bg-zinc-900 hover:text-white hover:border-red-600/30 px-6 italic transition-all self-start sm:self-auto">
+                    <Plus className="w-4 h-4 mr-2 text-red-600" /> Buat Polling
+                </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Scheduler Visualizer */}
-                <div className="lg:col-span-2 space-y-6 text-left">
-                    <div className="bg-zinc-900/40 p-8 rounded-[2.5rem] border border-zinc-800/50 shadow-sm text-left relative group overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                             <Clock className="w-40 h-40 text-white" />
-                        </div>
-                        <div className="flex items-center justify-between mb-10 relative z-10">
-                            <h3 className="text-sm font-black text-white flex items-center gap-3 uppercase tracking-widest italic">
-                                <Clock className="w-5 h-5 text-red-600" /> Weekly Schedule
-                            </h3>
-                            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-950/50 rounded-full border border-zinc-800 italic">
-                                <Timer className="w-3.5 h-3.5 text-red-600" />
-                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Next Release: 00:00 AM</span>
-                            </div>
-                        </div>
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {[
+                    { label: 'Total', value: pollStats.total, color: 'text-white' },
+                    { label: 'Live', value: pollStats.live, color: 'text-green-500' },
+                    { label: 'Draft', value: pollStats.draft, color: 'text-zinc-400' },
+                    { label: 'Closed', value: pollStats.closed, color: 'text-red-500' },
+                    { label: 'Total Votes', value: pollStats.total_votes, color: 'text-yellow-500' },
+                ].map((s, i) => (
+                    <div key={i} className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50">
+                        <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest italic mb-1">{s.label}</p>
+                        <p className={`text-2xl font-black italic tracking-tighter ${s.color}`}>{s.value}</p>
+                    </div>
+                ))}
+            </div>
 
-                        {/* Schedule Timeline */}
-                        <div className="grid grid-cols-7 gap-3 relative z-10">
-                            {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day, i) => (
-                                <div key={day} className={`flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-500 ${i === 0 ? 'bg-zinc-900 border-red-600/30 shadow-2xl shadow-red-900/10' : 'bg-zinc-950/30 border-zinc-800/50 opacity-40 hover:opacity-100 hover:border-zinc-700'}`}>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest italic ${i === 0 ? 'text-white' : 'text-zinc-700'}`}>{day}</span>
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${i === 0 ? 'bg-zinc-950 text-red-600 border-red-600/20 shadow-inner' : 'bg-zinc-900 text-zinc-800 border-zinc-800'}`}>
-                                        <ClipboardList className="w-5 h-5 shadow-[0_0_10px_rgba(220,38,38,0.2)]" />
+            {/* Polls List */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {polls.length > 0 ? polls.map(poll => {
+                    const totalVotes = poll.votes_count || 0;
+                    return (
+                        <div key={poll.id} className="bg-zinc-900/40 rounded-[2rem] border border-zinc-800/50 shadow-sm overflow-hidden group hover:bg-zinc-900/60 transition-all">
+                            <div className="p-6">
+                                {/* Header */}
+                                <div className="flex items-start justify-between mb-4">
+                                    <span className={`px-2.5 py-1 text-[9px] font-black rounded-lg border italic uppercase tracking-widest ${statusColors[poll.status]}`}>
+                                        {statusLabels[poll.status]}
+                                    </span>
+                                    <div className="flex gap-1.5">
+                                        <button onClick={() => handleToggleStatus(poll.id)} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-500 hover:text-white border border-zinc-700 transition-all" title="Toggle Status">
+                                            {poll.status === 'live' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                                        </button>
+                                        <button onClick={() => handleDelete(poll.id)} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-500 hover:text-red-500 border border-zinc-700 transition-all" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-tighter italic ${i === 0 ? 'text-red-500' : 'text-zinc-800'}`}>{i === 0 ? 'LIVE' : 'DRAFT'}</span>
                                 </div>
-                            ))}
-                        </div>
-                        
-                        <div className="mt-10 p-10 bg-zinc-950/30 rounded-[2rem] border border-dashed border-zinc-800 text-center relative z-10">
-                            <DraftingCompass className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
-                            <h4 className="text-sm font-black text-white uppercase italic tracking-widest">Poll Scheduler Pipeline</h4>
-                            <p className="text-[11px] text-zinc-600 max-w-sm mx-auto mt-2 font-medium italic">
-                                Belum ada draf polling yang dijadwalkan untuk minggu ini. Silakan tambahkan dari Bank Soal.
-                            </p>
-                        </div>
-                    </div>
 
-                    {/* Quick Trigger Section */}
-                    <div className="bg-zinc-900 p-8 rounded-[2.5rem] text-white relative overflow-hidden group border border-zinc-800 shadow-2xl">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-red-600 opacity-[0.03] rounded-full -mr-24 -mt-24 group-hover:scale-110 transition-transform duration-700"></div>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10 text-left">
-                            <div className="flex items-start gap-5 text-left">
-                                <div className="p-4 bg-zinc-800 rounded-[1.5rem] border border-zinc-700 group-hover:border-red-600/50 transition-colors">
-                                    <Smartphone className="w-8 h-8 text-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)]" />
-                                </div>
-                                <div className="text-left">
-                                    <h4 className="text-base font-black uppercase tracking-widest italic leading-none mb-2">MANUAL RESULT TRIGGER</h4>
-                                    <p className="text-[11px] text-zinc-500 max-w-xs leading-relaxed italic font-medium">
-                                        Gunakan ini jika sistem otomatis gagal mengirim hasil polling ke WhatsApp Channel.
-                                    </p>
-                                </div>
-                            </div>
-                            <Button className="bg-zinc-950 text-zinc-500 border border-dashed border-zinc-800 hover:bg-zinc-900 hover:text-white hover:border-red-600/30 h-12 px-10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] italic shadow-2xl transition-all border-none w-full sm:w-auto">
-                                <Send className="w-4 h-4 mr-2 text-red-600" /> Kirim Hasil Sekarang
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                                {/* Question */}
+                                <h3 className="text-sm font-black text-white mb-5 leading-relaxed italic">{poll.question}</h3>
 
-                {/* Right Analytics Area */}
-                <div className="space-y-6 text-left">
-                    <div className="bg-zinc-900/40 p-8 rounded-[2.5rem] border border-zinc-800/50 shadow-sm text-left relative group overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                             <BarChart3 className="w-32 h-32 text-white" />
-                        </div>
-                        <h4 className="text-[11px] font-black text-white mb-8 flex items-center gap-3 uppercase tracking-widest italic relative z-10">
-                            <BarChart3 className="w-5 h-5 text-red-600" /> Interaction Stats
-                        </h4>
-                        <div className="space-y-8 relative z-10">
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Voters Ratio</span>
-                                    <span className="text-[10px] font-black text-white italic">0.0%</span>
+                                {/* Options with vote bars */}
+                                <div className="space-y-3">
+                                    {poll.options.map((option, idx) => {
+                                        const count = poll.vote_distribution?.[idx] || 0;
+                                        const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                                        return (
+                                            <div key={idx} className="relative overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-950/50 group/opt">
+                                                <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent transition-all duration-700" style={{ width: `${pct}%` }} />
+                                                <div className="relative z-10 flex items-center justify-between px-4 py-3">
+                                                    <span className="text-[11px] font-bold text-zinc-300 italic">{option}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-black text-zinc-500 italic">{count} votes</span>
+                                                        <span className="text-[10px] font-black text-red-500 italic">{pct}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <div className="h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800 shadow-inner">
-                                    <div className="h-full bg-gradient-to-r from-red-600 to-red-400 w-0 transition-all duration-1000 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
-                                </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-5 bg-zinc-950/50 rounded-[1.8rem] border border-zinc-800/50 group-hover:border-zinc-700 transition-colors">
-                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] leading-none mb-2 italic">Total Votes</p>
-                                    <h5 className="text-2xl font-black text-white leading-none italic tracking-tighter">0</h5>
-                                </div>
-                                <div className="p-5 bg-zinc-950/50 rounded-[1.8rem] border border-zinc-800/50 group-hover:border-zinc-700 transition-colors">
-                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] leading-none mb-2 italic">Avg/Day</p>
-                                    <h5 className="text-2xl font-black text-white leading-none italic tracking-tighter">0</h5>
+
+                                {/* Footer */}
+                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-800/50">
+                                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest italic">{totalVotes} total votes</span>
+                                    <span className="text-[9px] text-zinc-700 italic font-bold">{new Date(poll.created_at).toLocaleDateString('id-ID')}</span>
                                 </div>
                             </div>
                         </div>
+                    );
+                }) : (
+                    <div className="lg:col-span-2 bg-zinc-900/20 p-20 rounded-[3rem] border border-zinc-800 text-center border-dashed">
+                        <ClipboardList className="w-16 h-16 text-zinc-800 mx-auto mb-6" />
+                        <h4 className="text-base font-black text-zinc-600 uppercase tracking-widest italic">Belum Ada Polling</h4>
+                        <p className="text-[11px] text-zinc-700 mt-3 italic font-bold">Buat polling pertama Anda dengan tombol di atas.</p>
                     </div>
-
-                    {/* System Log / Alert */}
-                    <div className="bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-800 flex items-start gap-5 group relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-600 opacity-[0.03] rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
-                        <div className="p-3 bg-red-600/10 border border-red-500/20 rounded-xl text-red-600 shadow-inner relative z-10">
-                            <AlertCircle className="w-5 h-5" />
-                        </div>
-                        <div className="relative z-10 text-left">
-                            <h4 className="text-[11px] font-black text-white mb-2 uppercase italic tracking-widest">AUTO-RELEASE ACTIVE</h4>
-                            <p className="text-[10px] text-zinc-500 leading-relaxed italic font-medium">
-                                Polling akan otomatis diperbarui setiap malam pukul 00:00 (WIB).
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
+
+            {/* Create Poll Modal */}
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <DialogContent className="bg-zinc-950 border-zinc-900 text-white sm:max-w-[500px] p-0 overflow-hidden rounded-[2rem]">
+                    <div className="p-8">
+                        <DialogHeader className="mb-6">
+                            <DialogTitle className="text-lg font-black italic tracking-widest uppercase flex items-center gap-2"><ClipboardList className="w-5 h-5 text-red-600" /> BUAT POLLING BARU</DialogTitle>
+                            <DialogDescription className="text-zinc-500 text-[11px] italic font-black">Tambahkan pertanyaan dan minimal 2 opsi jawaban.</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleCreate} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">Pertanyaan</label>
+                                <Input value={data.question} onChange={e => setData('question', e.target.value)} placeholder="Contoh: Kantin mana yang paling enak?" className="bg-zinc-900 border-zinc-800 text-white h-12 rounded-xl text-[11px] italic" />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">Opsi Jawaban</label>
+                                {options.map((opt, idx) => (
+                                    <div key={idx} className="flex gap-2">
+                                        <Input value={opt} onChange={e => updateOption(idx, e.target.value)} placeholder={`Opsi ${idx + 1}`} className="bg-zinc-900 border-zinc-800 text-white h-10 rounded-xl text-[11px] italic flex-1" />
+                                        {options.length > 2 && <button type="button" onClick={() => removeOption(idx)} className="p-2 text-red-600 hover:bg-red-600/10 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>}
+                                    </div>
+                                ))}
+                                {options.length < 6 && <button type="button" onClick={addOption} className="w-full py-2.5 border border-dashed border-zinc-800 rounded-xl text-[10px] font-black text-zinc-600 hover:text-white hover:border-zinc-700 transition-all italic uppercase tracking-widest">+ Tambah Opsi</button>}
+                            </div>
+                            <div className="flex gap-3">
+                                <Button type="submit" onClick={() => setData('status', 'draft')} disabled={processing || !data.question.trim()} className="flex-1 h-12 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-widest italic">Simpan Draft</Button>
+                                <Button type="submit" onClick={() => setData('status', 'live')} disabled={processing || !data.question.trim()} className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic">Go Live</Button>
+                            </div>
+                        </form>
+                    </div>
+                </DialogContent>
+            </Dialog>
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                <DialogContent className="bg-zinc-950 border-zinc-900 text-white sm:max-w-[400px] p-0 overflow-hidden rounded-[2rem]">
+                    <div className="p-8 text-center">
+                        <div className="w-16 h-16 bg-red-600/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 border border-red-600/20">
+                            <AlertCircle className="w-8 h-8 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-black italic tracking-widest uppercase mb-2">HAPUS POLLING?</h3>
+                        <p className="text-zinc-500 text-[11px] italic font-black mb-8 leading-relaxed">Tindakan ini tidak bisa dibatalkan. Semua data voting akan hilang secara permanen.</p>
+                        <div className="flex gap-3">
+                            <Button onClick={() => setIsDeleteOpen(false)} className="flex-1 h-12 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-widest italic">Batal</Button>
+                            <Button onClick={confirmDelete} className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg shadow-red-600/20">Ya, Hapus</Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

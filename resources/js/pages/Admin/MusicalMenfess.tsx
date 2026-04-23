@@ -1,4 +1,5 @@
-import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { 
     Music, 
     BarChart3, 
@@ -18,7 +19,13 @@ import {
     MessageSquare,
     Music2,
     Heart,
-    ShieldCheck
+    ShieldCheck,
+    X,
+    Plus,
+    Shield,
+    Zap,
+    AlertTriangle,
+    CheckCircle2
 } from 'lucide-react';
 import { 
     BarChart, 
@@ -31,6 +38,16 @@ import {
     Cell
 } from 'recharts';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from 'sonner';
 
 interface User {
@@ -69,6 +86,13 @@ interface SongfessFilter {
     reason: string;
 }
 
+interface ProfanityWordItem {
+    id: number;
+    word: string;
+    category: string;
+    is_active: boolean;
+}
+
 interface MusicalMenfessProps {
     analytics: SongfessAnalytic[];
     filters: SongfessFilter[];
@@ -76,12 +100,48 @@ interface MusicalMenfessProps {
     settings: {
         copyright_compliance_mode?: string
     };
+    profanityWords?: ProfanityWordItem[];
 }
 
 const COLORS = ['#000', '#111', '#222', '#333', '#444'];
 
-export default function MusicalMenfess({ analytics, filters, messages, settings }: MusicalMenfessProps) {
+const CATEGORY_COLORS: Record<string, string> = {
+    general: 'border-zinc-700 text-zinc-400',
+    sexual: 'border-pink-800/50 text-pink-500',
+    racist: 'border-orange-800/50 text-orange-500',
+    violence: 'border-red-800/50 text-red-500',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+    general: 'Umum',
+    sexual: 'Seksual',
+    racist: 'SARA',
+    violence: 'Kekerasan',
+};
+
+export default function MusicalMenfess({ analytics, filters, messages, settings, profanityWords = [] }: MusicalMenfessProps) {
     const isCopyrightMode = settings.copyright_compliance_mode === '1';
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        title: string;
+        description: string;
+        onConfirm: () => void;
+        type: 'danger' | 'warning';
+    } | null>(null);
+    const [filterSearch, setFilterSearch] = useState('');
+    const [filterCategory, setFilterCategory] = useState('all');
+
+    // Test checker state
+    const [testText, setTestText] = useState('');
+    const [testResult, setTestResult] = useState<{ is_profane: boolean; matches: string[] } | null>(null);
+    const [isTesting, setIsTesting] = useState(false);
+
+    // Add word form
+    const { data: newWordData, setData: setNewWordData, post: postNewWord, processing: isAddingWord, reset: resetNewWord } = useForm({
+        word: '',
+        category: 'general',
+    });
 
     const toggleCopyrightMode = () => {
         router.post('/admin/settings/toggle-musical', {
@@ -95,23 +155,97 @@ export default function MusicalMenfess({ analytics, filters, messages, settings 
     };
 
     const handleDeleteMessage = (id: number) => {
-        if (confirm('Apakah Anda yakin ingin menghapus pesan ini?')) {
-            router.delete(`/admin/musical-menfess/${id}`, {
-                preserveScroll: true,
-                onSuccess: () => toast.success('Pesan berhasil dihapus')
-            });
-        }
+        setConfirmAction({
+            title: 'Hapus Pesan?',
+            description: 'Apakah Anda yakin ingin menghapus pesan ini? Tindakan ini tidak bisa dibatalkan.',
+            type: 'danger',
+            onConfirm: () => {
+                router.delete(`/admin/musical-menfess/${id}`, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setIsConfirmOpen(false);
+                        toast.success('Pesan berhasil dihapus');
+                    }
+                });
+            }
+        });
+        setIsConfirmOpen(true);
     };
 
     const handleToggleBlock = (user: User) => {
         const action = user.is_blocked ? 'membuka blokir' : 'memblokir';
-        if (confirm(`Apakah Anda yakin ingin ${action} user ${user.name}?`)) {
-            router.post(`/admin/users/${user.id}/toggle-block`, {}, {
-                preserveScroll: true,
-                onSuccess: () => toast.success(user.is_blocked ? 'User unblocked' : 'User blocked')
+        setConfirmAction({
+            title: user.is_blocked ? 'Buka Blokir?' : 'Blokir User?',
+            description: `Apakah Anda yakin ingin ${action} user ${user.name}?`,
+            type: user.is_blocked ? 'warning' : 'danger',
+            onConfirm: () => {
+                router.post(`/admin/users/${user.id}/toggle-block`, {}, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setIsConfirmOpen(false);
+                        toast.success(user.is_blocked ? 'User unblocked' : 'User blocked');
+                    }
+                });
+            }
+        });
+        setIsConfirmOpen(true);
+    };
+
+    const handleAddWord = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newWordData.word.trim()) return;
+        postNewWord('/admin/profanity-words', {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(`"${newWordData.word}" berhasil ditambahkan!`);
+                resetNewWord();
+            },
+            onError: () => toast.error('Gagal menambahkan kata.')
+        });
+    };
+
+    const handleDeleteWord = (id: number) => {
+        router.delete(`/admin/profanity-words/${id}`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Kata berhasil dihapus!'),
+            onError: () => toast.error('Gagal menghapus kata.')
+        });
+    };
+
+    const handleToggleWord = (id: number) => {
+        router.put(`/admin/profanity-words/${id}/toggle`, {}, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Status kata diperbarui!')
+        });
+    };
+
+    const handleTestCheck = async () => {
+        if (!testText.trim()) return;
+        setIsTesting(true);
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch('/admin/profanity-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify({ text: testText })
             });
+            const data = await res.json();
+            setTestResult(data);
+        } catch {
+            toast.error('Gagal memeriksa teks.');
+        } finally {
+            setIsTesting(false);
         }
     };
+
+    // Filter words for display
+    const filteredWords = profanityWords.filter(w => {
+        const matchSearch = w.word.toLowerCase().includes(filterSearch.toLowerCase());
+        const matchCategory = filterCategory === 'all' || w.category === filterCategory;
+        return matchSearch && matchCategory;
+    });
+
+    const activeCount = profanityWords.filter(w => w.is_active).length;
 
     const chartData = analytics.map(item => ({
         name: `${item.artist_name} - ${item.song_title}`,
@@ -129,8 +263,12 @@ export default function MusicalMenfess({ analytics, filters, messages, settings 
                     <p className="text-xs sm:text-sm text-zinc-500 mt-1">Analisis tren lagu dan moderasi pesan yang menyertakan musik.</p>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <Button variant="outline" className="rounded-xl h-9 sm:h-11 text-[10px] sm:text-xs font-black uppercase tracking-widest border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all italic border-dashed">
-                        <ShieldAlert className="w-4 h-4 mr-2 text-red-600" /> Dedicated Filter
+                    <Button 
+                        onClick={() => setIsFilterModalOpen(true)}
+                        variant="outline" 
+                        className="rounded-xl h-9 sm:h-11 text-[10px] sm:text-xs font-black uppercase tracking-widest border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all italic border-dashed"
+                    >
+                        <ShieldAlert className="w-4 h-4 mr-2 text-red-600" /> Dedicated Filter ({activeCount})
                     </Button>
                     <Button 
                         onClick={toggleCopyrightMode}
@@ -238,6 +376,30 @@ export default function MusicalMenfess({ analytics, filters, messages, settings 
                             )}
                         </div>
                     </div>
+
+                    {/* Profanity Stats Mini */}
+                    <div className="bg-zinc-900/40 p-6 rounded-[2rem] border border-zinc-800/50 shadow-sm text-left">
+                        <h4 className="text-[11px] font-black text-white mb-6 flex items-center gap-2 uppercase tracking-widest italic">
+                             <Shield className="w-4 h-4 text-red-600" /> Profanity Database
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800/50 text-center">
+                                <p className="text-2xl font-black text-white italic leading-none mb-1">{profanityWords.length}</p>
+                                <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest italic">Total Kata</p>
+                            </div>
+                            <div className="p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800/50 text-center">
+                                <p className="text-2xl font-black text-green-500 italic leading-none mb-1">{activeCount}</p>
+                                <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest italic">Aktif</p>
+                            </div>
+                        </div>
+                        <Button 
+                            onClick={() => setIsFilterModalOpen(true)}
+                            variant="outline"
+                            className="w-full mt-4 h-10 border-zinc-800 bg-zinc-950/50 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-xl transition-all italic border-dashed"
+                        >
+                            <ShieldAlert className="w-3.5 h-3.5 mr-2 text-red-600" /> Kelola Filter
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Moderation Feed */}
@@ -295,7 +457,7 @@ export default function MusicalMenfess({ analytics, filters, messages, settings 
                                             </div>
                                         </div>
 
-                                        {/* Message Body (Handwritten Aesthetic on Dark) */}
+                                        {/* Message Body */}
                                         <div className="flex-1 bg-zinc-950/50 p-6 rounded-[2rem] border-l-4 border-red-600 relative mb-6 flex flex-col justify-center min-h-[140px] shadow-inner group-hover:bg-zinc-950/80 transition-colors">
                                             <div className="absolute top-4 right-4 opacity-[0.05]">
                                                 <MessageSquare className="w-16 h-16 text-white" />
@@ -339,6 +501,179 @@ export default function MusicalMenfess({ analytics, filters, messages, settings 
                     </div>
                 </div>
             </div>
+
+            {/* ============ DEDICATED FILTER MODAL ============ */}
+            <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
+                <DialogContent className="bg-zinc-950 border-zinc-900 text-white sm:max-w-[700px] p-0 overflow-hidden rounded-[2.5rem]">
+                    <div className="p-8">
+                        <DialogHeader className="mb-6">
+                            <DialogTitle className="text-xl font-black italic tracking-widest uppercase flex items-center gap-3">
+                                <ShieldAlert className="text-red-600 w-6 h-6" /> DEDICATED FILTER
+                            </DialogTitle>
+                            <DialogDescription className="text-zinc-500 text-[11px] italic uppercase tracking-widest font-black">
+                                Database kata kasar otomatis. Mendeteksi kata asli maupun yang disamarkan (leet-speak).
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {/* Live Test Area */}
+                        <div className="bg-zinc-900/50 p-5 rounded-[2rem] border border-zinc-800 mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Zap className="w-4 h-4 text-yellow-500" />
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Live Test — Cek Kata Kasar</span>
+                            </div>
+                            <div className="flex gap-3">
+                                <Input
+                                    value={testText}
+                                    onChange={(e) => { setTestText(e.target.value); setTestResult(null); }}
+                                    placeholder="Ketik teks untuk dicek, misal: 4nj1ng atau b4b1..."
+                                    className="bg-zinc-950 border-zinc-800 text-zinc-200 text-[11px] h-11 px-5 rounded-xl focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 italic font-black flex-1"
+                                />
+                                <Button
+                                    onClick={handleTestCheck}
+                                    disabled={isTesting || !testText.trim()}
+                                    className="h-11 px-6 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-widest italic transition-all"
+                                >
+                                    {isTesting ? '...' : 'Cek'}
+                                </Button>
+                            </div>
+                            {testResult && (
+                                <div className={`mt-3 p-3 rounded-xl border ${testResult.is_profane ? 'bg-red-950/30 border-red-800/50' : 'bg-green-950/30 border-green-800/50'}`}>
+                                    {testResult.is_profane ? (
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                                            <p className="text-[11px] text-red-400 font-black italic">
+                                                Terdeteksi kata kasar: <span className="text-red-300">{testResult.matches.join(', ')}</span>
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                                            <p className="text-[11px] text-green-400 font-black italic">Teks aman, tidak ditemukan kata kasar.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Add New Word */}
+                        <form onSubmit={handleAddWord} className="flex gap-3 mb-6">
+                            <Input
+                                value={newWordData.word}
+                                onChange={(e) => setNewWordData('word', e.target.value)}
+                                placeholder="Tambah kata baru..."
+                                className="bg-zinc-900 border-zinc-800 text-zinc-200 text-[11px] h-11 px-5 rounded-xl focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 italic font-black flex-1"
+                            />
+                            <select
+                                value={newWordData.category}
+                                onChange={(e) => setNewWordData('category', e.target.value)}
+                                className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] h-11 px-3 rounded-xl font-black italic uppercase tracking-widest focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20"
+                            >
+                                <option value="general">Umum</option>
+                                <option value="sexual">Seksual</option>
+                                <option value="racist">SARA</option>
+                                <option value="violence">Kekerasan</option>
+                            </select>
+                            <Button
+                                type="submit"
+                                disabled={isAddingWord || !newWordData.word.trim()}
+                                className="h-11 px-5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-[0_0_15px_rgba(220,38,38,0.2)]"
+                            >
+                                <Plus className="w-4 h-4 mr-1" /> Tambah
+                            </Button>
+                        </form>
+
+                        {/* Search & Filter */}
+                        <div className="flex gap-3 mb-4">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+                                <Input
+                                    value={filterSearch}
+                                    onChange={(e) => setFilterSearch(e.target.value)}
+                                    placeholder="Cari kata..."
+                                    className="bg-zinc-900 border-zinc-800 text-zinc-200 text-[11px] h-9 pl-9 pr-4 rounded-xl focus:border-red-600/30 italic font-black"
+                                />
+                            </div>
+                            <div className="flex gap-1.5">
+                                {['all', 'general', 'sexual', 'racist', 'violence'].map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setFilterCategory(cat)}
+                                        className={`px-3 h-9 rounded-xl text-[9px] font-black uppercase tracking-widest italic border transition-all ${
+                                            filterCategory === cat 
+                                            ? 'bg-red-600/20 border-red-600/50 text-red-500' 
+                                            : 'bg-zinc-900 border-zinc-800 text-zinc-600 hover:text-zinc-400'
+                                        }`}
+                                    >
+                                        {cat === 'all' ? 'Semua' : CATEGORY_LABELS[cat]}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Words Grid */}
+                        <div className="max-h-[280px] overflow-y-auto custom-scrollbar pr-2">
+                            <div className="flex flex-wrap gap-2">
+                                {filteredWords.length > 0 ? filteredWords.map(w => (
+                                    <div
+                                        key={w.id}
+                                        className={`px-3 py-1.5 rounded-xl flex items-center gap-2 border text-[10px] font-black italic transition-all group/word ${
+                                            w.is_active 
+                                            ? `bg-zinc-950 ${CATEGORY_COLORS[w.category] || CATEGORY_COLORS.general} hover:border-red-600/50` 
+                                            : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-700 line-through'
+                                        }`}
+                                    >
+                                        <span 
+                                            onClick={() => handleToggleWord(w.id)}
+                                            className="cursor-pointer hover:text-white transition-colors"
+                                            title={w.is_active ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
+                                        >
+                                            {w.word}
+                                        </span>
+                                        <button
+                                            onClick={() => handleDeleteWord(w.id)}
+                                            className="opacity-0 group-hover/word:opacity-100 transition-opacity"
+                                        >
+                                            <X className="w-3 h-3 text-red-600 hover:text-red-400 cursor-pointer" />
+                                        </button>
+                                    </div>
+                                )) : (
+                                    <p className="text-[10px] text-zinc-600 italic font-bold p-4">Tidak ada kata ditemukan.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center justify-between">
+                            <p className="text-[9px] text-zinc-600 italic font-bold">
+                                Menampilkan {filteredWords.length} dari {profanityWords.length} kata
+                            </p>
+                            <p className="text-[9px] text-zinc-600 italic font-bold flex items-center gap-1.5">
+                                <Zap className="w-3 h-3 text-yellow-600" /> Deteksi leet-speak otomatis aktif (4→a, 1→i, 0→o, 3→e, 5→s, 7→t)
+                            </p>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+            {/* Confirmation Modal */}
+            <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                <DialogContent className="bg-zinc-950 border-zinc-900 text-white sm:max-w-[400px] p-0 overflow-hidden rounded-[2rem]">
+                    <div className="p-8 text-center">
+                        <div className={`w-16 h-16 ${confirmAction?.type === 'danger' ? 'bg-red-600/10 border-red-600/20' : 'bg-yellow-600/10 border-yellow-600/20'} rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 border`}>
+                            {confirmAction?.type === 'danger' ? <Trash2 className="w-8 h-8 text-red-600" /> : <AlertTriangle className="w-8 h-8 text-yellow-500" />}
+                        </div>
+                        <h3 className="text-lg font-black italic tracking-widest uppercase mb-2">{confirmAction?.title}</h3>
+                        <p className="text-zinc-500 text-[11px] italic font-black mb-8 leading-relaxed">{confirmAction?.description}</p>
+                        <div className="flex gap-3">
+                            <Button onClick={() => setIsConfirmOpen(false)} className="flex-1 h-12 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-widest italic">Batal</Button>
+                            <Button 
+                                onClick={confirmAction?.onConfirm} 
+                                className={`flex-1 h-12 ${confirmAction?.type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : 'bg-yellow-600 hover:bg-yellow-700 shadow-yellow-600/20'} text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-lg`}
+                            >
+                                Ya, Lanjutkan
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -1,4 +1,5 @@
-import { Head } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Head, useForm } from '@inertiajs/react';
 import { 
     Bell, 
     Send, 
@@ -15,8 +16,51 @@ import {
     LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
-export default function Notifications() {
+interface Props {
+    notificationRules?: { title: string; content: string };
+}
+
+export default function Notifications({ notificationRules }: Props) {
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+    const { data: settingsData, setData: setSettingsData, post: saveSettings, processing: isSavingSettings } = useForm({
+        title: notificationRules?.title || "",
+        content: notificationRules?.content || "",
+    });
+
+    useEffect(() => {
+        setSettingsData({
+            title: notificationRules?.title || "",
+            content: notificationRules?.content || "",
+        });
+    }, [notificationRules]);
+
+    const handleSaveSettings = (e: React.FormEvent) => {
+        e.preventDefault();
+        saveSettings('/admin/notifications/settings', {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Pengaturan Notifikasi berhasil disimpan!');
+                setIsSettingsModalOpen(false);
+            },
+            onError: (errors) => {
+                console.error(errors);
+                toast.error('Gagal menyimpan pengaturan.');
+            },
+        });
+    };
     return (
         <div className="space-y-6 text-left">
             <Head title="WhatsApp & Notification Center" />
@@ -138,23 +182,91 @@ export default function Notifications() {
                         </Button>
                     </div>
 
-                    {/* Notification Tips */}
+                    {/* Notification Tips (Dynamic) */}
                     <div className="bg-zinc-900 p-8 rounded-[2.5rem] text-white text-left shadow-2xl border border-zinc-800/50 relative group overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-red-600 opacity-[0.02] rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
                         <h4 className="text-[11px] font-black mb-8 flex items-center gap-3 uppercase tracking-widest italic relative z-10">
-                            <AlertCircle className="w-5 h-5 text-red-600" /> Notification Rules
+                            <AlertCircle className="w-5 h-5 text-red-600" /> KELOLA NOTIFIKASI
                         </h4>
-                        <ul className="space-y-4 relative z-10">
-                            <li className="flex items-start gap-4 group/item">
-                                <div className="w-1.5 h-1.5 rounded-full bg-red-600 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(220,38,38,0.5)] group-hover/item:scale-150 transition-transform"></div>
-                                <p className="text-[11px] text-zinc-500 leading-relaxed italic font-medium group-hover/item:text-zinc-300 transition-colors">Broadcast maksimal dikirim 1x sehari untuk menghindari SPAM rating oleh WhatsApp.</p>
-                            </li>
-                            <li className="flex items-start gap-4 group/item">
-                                <div className="w-1.5 h-1.5 rounded-full bg-red-600 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(220,38,38,0.5)] group-hover/item:scale-150 transition-transform"></div>
-                                <p className="text-[11px] text-zinc-500 leading-relaxed italic font-medium group-hover/item:text-zinc-300 transition-colors">Gunakan format markdown sederhana {`*tebal*`} atau {`_miring_`} untuk pesan WA.</p>
-                            </li>
-                        </ul>
+                        
+                        <div className="space-y-4 mb-10 max-h-[150px] overflow-y-auto custom-scrollbar pr-2 mt-6 relative z-10">
+                            {notificationRules?.title && (
+                                <p className="text-red-500 text-[11px] font-black italic uppercase tracking-[0.2em] leading-tight mb-2">
+                                    {notificationRules.title}
+                                </p>
+                            )}
+                            
+                            <div className="space-y-2">
+                                {notificationRules?.content ? (
+                                    notificationRules.content.split('\n').filter(r => r.trim() !== '').map((rule, idx) => (
+                                        <div key={idx} className="flex items-start gap-4 group/item">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-600 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(220,38,38,0.5)] group-hover/item:scale-150 transition-transform"></div>
+                                            <p className="text-[11px] text-zinc-500 leading-relaxed italic font-medium group-hover/item:text-zinc-300 transition-colors">{rule.trim()}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-zinc-600 text-[10px] italic font-medium">Belum ada peraturan notifikasi yang diatur.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <Button 
+                            onClick={() => setIsSettingsModalOpen(true)}
+                            variant="outline"
+                            className="w-full relative z-10 py-8 bg-zinc-950 text-zinc-400 border border-dashed border-zinc-800 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-zinc-900 hover:text-red-500 hover:border-red-600/30 transition-all shadow-xl italic h-auto"
+                        >
+                            Kelola Pengaturan
+                        </Button>
                     </div>
+
+                    {/* Settings Modal */}
+                    <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+                        <DialogContent className="bg-zinc-950 border-zinc-900 text-white sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem]">
+                            <div className="p-8">
+                                <DialogHeader className="mb-8">
+                                    <DialogTitle className="text-xl font-black italic tracking-widest uppercase">KELOLA NOTIFIKASI</DialogTitle>
+                                    <DialogDescription className="text-zinc-500 text-[11px] italic uppercase tracking-widest font-black">
+                                        Atur petunjuk penggunaan fitur WhatsApp & Notifikasi di sini.
+                                    </DialogDescription>
+                                </DialogHeader>
+
+                                <form onSubmit={handleSaveSettings} className="space-y-8">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2.5">
+                                            <Label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic ml-1">
+                                                Judul Syarat & Ketentuan
+                                            </Label>
+                                            <Input
+                                                value={settingsData.title}
+                                                onChange={(e) => setSettingsData('title', e.target.value)}
+                                                placeholder="Contoh: ATURAN BROADCAST WA"
+                                                className="bg-zinc-900 border-zinc-800 text-zinc-200 text-[11px] h-12 px-6 rounded-2xl focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 italic font-black"
+                                            />
+                                        </div>
+                                        <div className="space-y-2.5">
+                                            <Label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic ml-1">
+                                                Daftar Peraturan (Tiap baris jadi poin)
+                                            </Label>
+                                            <Textarea
+                                                value={settingsData.content}
+                                                onChange={(e) => setSettingsData('content', e.target.value)}
+                                                placeholder="1. Maksimal 1x per hari...&#13;&#10;2. Gunakan *tebal* untuk..."
+                                                className="bg-zinc-900 border-zinc-800 text-zinc-200 text-[11px] min-h-[150px] p-5 rounded-2xl focus:border-red-600/30 focus:ring-1 focus:ring-red-600/20 leading-relaxed italic resize-none custom-scrollbar"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <Button
+                                        type="submit"
+                                        disabled={isSavingSettings}
+                                        className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(220,38,38,0.2)] transition-all"
+                                    >
+                                        {isSavingSettings ? 'MENYIMPAN...' : 'SIMPAN PENGATURAN'}
+                                    </Button>
+                                </form>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
         </div>

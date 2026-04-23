@@ -12,7 +12,8 @@ import {
     Gift,
     Music,
     ChevronRight,
-    Settings
+    Settings,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, ReactNode, useEffect } from 'react';
@@ -81,6 +82,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         {
             title: 'Moderasi',
             items: [
+                { icon: FileText, label: 'Menfess Manager', path: '/admin/menfess' },
                 { icon: MessageSquare, label: 'Content Moderation', path: '/admin/moderation' },
                 { icon: Music, label: 'Musical Menfess', path: '/admin/musical-menfess' },
             ]

@@ -13,8 +13,43 @@ import {
     X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useForm, router } from '@inertiajs/react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-export default function Moderation() {
+interface ProfanityWord {
+    id: number;
+    word: string;
+    is_active: boolean;
+}
+
+interface Props {
+    reportedPosts: any[];
+    pinnedPosts: any[];
+    pinnedCost: number;
+    profanityWords: ProfanityWord[];
+}
+
+export default function Moderation({ reportedPosts, pinnedPosts, pinnedCost, profanityWords }: Props) {
+    const [newWord, setNewWord] = useState('');
+
+    const handleAddWord = () => {
+        if (!newWord.trim()) return;
+        router.post('/admin/profanity-words', { word: newWord }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setNewWord('');
+                toast.success('Kata terlarang ditambahkan!');
+            }
+        });
+    };
+
+    const handleDeleteWord = (id: number) => {
+        router.delete(`/admin/profanity-words/${id}`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Kata terlarang dihapus!')
+        });
+    };
     return (
         <div className="space-y-6 text-left">
             <Head title="Content Moderation" />
@@ -90,21 +125,26 @@ export default function Moderation() {
                         <h4 className="text-[11px] font-black text-white mb-8 flex items-center gap-3 uppercase tracking-widest italic">
                             <Shield className="w-5 h-5 text-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)]" /> Banned Words List
                         </h4>
-                        <div className="flex flex-wrap gap-2.5 mb-10">
-                            <span className="px-3.5 py-1.5 bg-zinc-950 text-zinc-400 text-[10px] font-black rounded-xl flex items-center gap-2 border border-zinc-800 italic group hover:border-red-600/50 hover:text-white transition-all">
-                                kasar <X className="w-3 h-3 text-red-600 cursor-pointer" />
-                            </span>
-                            <span className="px-3.5 py-1.5 bg-zinc-950 text-zinc-400 text-[10px] font-black rounded-xl flex items-center gap-2 border border-zinc-800 italic group hover:border-red-600/50 hover:text-white transition-all">
-                                rasis <X className="w-3 h-3 text-red-600 cursor-pointer" />
-                            </span>
+                        <div className="flex flex-wrap gap-2.5 mb-10 max-h-[300px] overflow-y-auto custom-scrollbar">
+                            {profanityWords.map(pw => (
+                                <span key={pw.id} className="px-3.5 py-1.5 bg-zinc-950 text-zinc-400 text-[10px] font-black rounded-xl flex items-center gap-2 border border-zinc-800 italic group hover:border-red-600/50 hover:text-white transition-all">
+                                    {pw.word} <X onClick={() => handleDeleteWord(pw.id)} className="w-3 h-3 text-red-600 cursor-pointer hover:scale-125 transition-transform" />
+                                </span>
+                            ))}
+                            {profanityWords.length === 0 && (
+                                <p className="text-[11px] italic text-zinc-600">Belum ada kata terlarang.</p>
+                            )}
                         </div>
                         <div className="relative group">
                             <input 
                                 type="text" 
+                                value={newWord}
+                                onChange={e => setNewWord(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleAddWord()}
                                 placeholder="Tambah kata baru..." 
                                 className="w-full text-[11px] px-5 py-4 bg-zinc-950 border border-zinc-900 rounded-[1.5rem] focus:ring-1 focus:ring-red-600/30 text-white placeholder:text-zinc-800 italic font-medium group-hover:border-zinc-800 transition-all pr-24"
                             />
-                            <Button className="absolute right-2 top-2 h-10 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800 hover:border-red-600/30 italic transition-all">Tambah</Button>
+                            <Button onClick={handleAddWord} className="absolute right-2 top-2 h-10 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800 hover:border-red-600/30 italic transition-all">Tambah</Button>
                         </div>
                     </div>
 
