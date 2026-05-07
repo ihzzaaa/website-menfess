@@ -18,11 +18,28 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
         ]);
 
-        // User::factory(10)->create();
+        // Manual insert raw users without invoking Factory to avoid two_factor_secret column issues
+        \App\Models\User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        \App\Models\User::firstOrCreate(
+            ['email' => 'test2@example.com'],
+            [
+                'name' => 'Test User ke Dua',
+                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $this->call([
+            MarketplaceSeeder::class,
+            MenfessSeeder::class,
         ]);
     }
 }
