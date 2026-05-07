@@ -10,13 +10,7 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'slug',
-        'icon',
-        'description',
-        'parent_id',
-        'sort_order',
-        'is_active',
+        'name', 'slug', 'icon', 'description', 'parent_id', 'sort_order', 'is_active'
     ];
 
     protected $casts = [
@@ -36,5 +30,10 @@ class Category extends Model
     public function marketplaceItems()
     {
         return $this->hasMany(MarketplaceItem::class);
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
     }
 }

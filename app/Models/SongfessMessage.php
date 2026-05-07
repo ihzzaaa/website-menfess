@@ -21,6 +21,11 @@ class SongfessMessage extends Model
         'status',
     ];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\ShadowBanScope);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

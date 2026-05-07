@@ -4,15 +4,71 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\MenfessController;
+use App\Http\Controllers\MarketplaceController;
+use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\SongfessController;
+use App\Http\Controllers\PollController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\SellerVerificationController;
 
-// Home - redirect ke admin login
-Route::get('/', function () {
-    return redirect('/admin/login');
-})->name('home');
+// Public Routes (Menfess diposisikan sebagai halaman depan)
+Route::get('/', [LandingPageController::class, 'index'])->name('home');
+Route::get('/menfess', [MenfessController::class, 'index'])->name('menfess.index');
+Route::get('/menfess/{post}', [MenfessController::class, 'show'])->name('menfess.show');
 
-// User dashboard (untuk regular users - menggunakan Fortify)
+Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
+Route::get('/marketplace/{slug}', [MarketplaceController::class, 'show'])->name('marketplace.show');
+
+Route::get('/songfess', [SongfessController::class, 'index'])->name('songfess.index');
+Route::get('/api/spotify/search', [SongfessController::class, 'searchSpotify'])->name('songfess.api.search');
+
+// REST Integrations Public Endpoint
+Route::get('/api/polls/active', [PollController::class, 'activePoll'])->name('polls.active');
+Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [SocialAuthController::class, 'callback']);
+
+// User dashboard dan aksi yang butuh Login (untuk regular users)
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    
+    // Auth Lonceng API
+    Route::get('/api/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    
+    // Fitur Aduan Moderasi
+    Route::post('/report', [ReportController::class, 'store'])->name('report.store');
+    
+    // Fitur Pengajuan Verifikasi Seller
+    Route::post('/seller-verification/apply', [SellerVerificationController::class, 'store'])->name('seller.verify');
+
+    Route::post('/menfess', [MenfessController::class, 'store'])->name('menfess.store');
+    Route::post('/menfess/{post}/comment', [MenfessController::class, 'reply'])->name('menfess.reply');
+    Route::post('/menfess/{post}/vote', [MenfessController::class, 'votePost'])->name('menfess.vote');
+    Route::post('/menfess-comments/{comment}/vote', [MenfessController::class, 'voteComment'])->name('menfess.comment.vote');
+    
+    // Interaksi Share & Repost & WTB & Koin VIP/PIN
+    Route::post('/menfess/{post}/share', [MenfessController::class, 'share'])->name('menfess.share');
+    Route::post('/menfess/{post}/repost', [MenfessController::class, 'repost'])->name('menfess.repost');
+    Route::post('/menfess/{post}/share/wtb', [MenfessController::class, 'shareToMarketplace'])->name('menfess.wtb');
+    Route::post('/menfess/{post}/pin', [MenfessController::class, 'pin'])->name('menfess.pin');
+
+    // Marketplace
+    Route::post('/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
+    
+    Route::post('/songfess', [SongfessController::class, 'store'])->name('songfess.store');
+    
+    Route::post('/polls/{poll}/vote', [PollController::class, 'vote'])->name('polls.vote');
+
+    // PANEL ADMIN MODERASI VERIFIKASI (Seharusnya berada dalam auth:admin middleware kelak)
+    Route::post('/admin/seller-verification/{verification}/approve', [\App\Http\Controllers\Admin\VerificationController::class, 'approve'])->name('admin.seller.approve');
+    Route::post('/admin/seller-verification/{verification}/reject', [\App\Http\Controllers\Admin\VerificationController::class, 'reject'])->name('admin.seller.reject');
+    
+    // PANEL ADMIN USER MANAGEMENT
+    Route::post('/admin/users/{user}/shadow-ban', [\App\Http\Controllers\Admin\UserController::class, 'shadowBan'])->name('admin.users.shadow_ban');
 });
 
 require __DIR__.'/settings.php';
