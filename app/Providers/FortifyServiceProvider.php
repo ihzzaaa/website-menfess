@@ -47,9 +47,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
+        // Override Fortify's default login view to use Admin Login
+        Fortify::loginView(fn (Request $request) => Inertia::render('Admin/Login', [
             'status' => $request->session()->get('status'),
         ]));
 

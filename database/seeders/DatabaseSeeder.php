@@ -13,11 +13,33 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seed admin account
+        $this->call([
+            AdminSeeder::class,
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Manual insert raw users without invoking Factory to avoid two_factor_secret column issues
+        \App\Models\User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        \App\Models\User::firstOrCreate(
+            ['email' => 'test2@example.com'],
+            [
+                'name' => 'Test User ke Dua',
+                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $this->call([
+            MarketplaceSeeder::class,
+            MenfessSeeder::class,
         ]);
     }
 }

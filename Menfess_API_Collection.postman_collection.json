@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "f554ac83-8d62-421b-bc6d-abcdef123456",
+		"name": "Menfess Auto-Base Backend API (Inertia)",
+		"description": "Koleksi Endpoint untuk Simulasi Presentasi Menfess, Marketplace, dan Songfess",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. GET Landing Page (Beranda Auto-Base)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Inertia",
+						"value": "true",
+						"description": "Memaksa Laravel mereturn JSON murni, bukan HTML"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						""
+					]
+				}
+			}
+		},
+		{
+			"name": "2. POST Create Menfess (Word Filter & Gamifikasi)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "content",
+							"value": "Halo min, mau tanya info UKM basket latihannya tiap hari apa ya? thx!",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/menfess",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"menfess"
+					]
+				}
+			}
+		},
+		{
+			"name": "3. POST Songfess (Radio Pintar Spotify)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "sender_name",
+							"value": "Anonim Teknik",
+							"type": "text"
+						},
+						{
+							"key": "recipient_name",
+							"value": "Mahasiswi FEB Jas Merah",
+							"type": "text"
+						},
+						{
+							"key": "song_title",
+							"value": "Sempurna by Andra And The Backbone",
+							"type": "text"
+						},
+						{
+							"key": "message",
+							"value": "Semoga skripsinya dimudahkan ya, semangat terus!",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/songfess",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"songfess"
+					]
+				}
+			}
+		},
+		{
+			"name": "4. GET Marketplace & Engine WTB",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Inertia",
+						"value": "true"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/marketplace",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"marketplace"
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000"
+		}
+	]
+}
